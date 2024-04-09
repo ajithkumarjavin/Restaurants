@@ -12,6 +12,7 @@ class Controller extends BaseController {
       if (_.isEmpty(checkEmail)) {
         const generatedOtp = Math.floor(1000 + Math.random() * 9000)
         const userSignUpDetail = await userservice.userSignUp(req.body, generatedOtp)
+        console.log("userSignUpDetail", userSignUpDetail)
         if (userSignUpDetail) {
           const data = Controller.getPayload(userSignUpDetail)
           this.sendResponse(req, res, SUCCESS.CODE, {
@@ -101,7 +102,7 @@ class Controller extends BaseController {
 
   static getPayload(data) {
     return {
-      mobileNumber: data.email,
+      email: data.email,
       type: data.type
     }
   }

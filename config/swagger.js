@@ -13,12 +13,12 @@ module.exports = {
       // url: `http://localhost:3000`
     }
   ],
-  // tags: [
-  //   {
-  //     name: 'Auth',
-  //     description: 'API for Auth'
-  //   }
-  // ],
+  tags: [
+    {
+      name: 'Auth',
+      description: 'API for Auth'
+    }
+  ],
   paths: {
 
     // user Signup
