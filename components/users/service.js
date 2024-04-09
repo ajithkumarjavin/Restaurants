@@ -215,12 +215,10 @@ class Service {
   }
 
   async validateOtp(userInfo) {
-    console.log("userInfo", userInfo)
     let data
     if (userInfo.type === USER.SIGNIN) {
-      console.log("SIGNIN")
       const signup = {
-        fisrtName: userInfo.fisrtName,
+        firstName: userInfo.firstName,
         lastName: userInfo.lastName,
         email: userInfo.email,
         mobileNumber: userInfo.mobileNumber,
@@ -230,8 +228,6 @@ class Service {
       data = new User(signup)
       return data.save()
     } else if (userInfo.type === USER.LOGIN) {
-      console.log("LOGIN")
-
       data = await User.findOneAndUpdate({ email: userInfo.email }, { $set: { status: USER.ACTIVE } })
       return data
     } else {

@@ -69,19 +69,13 @@ class Controller extends BaseController {
   }
 
   async validateOtp(req, res, next) {
-    console.log('req', req)
     try {
       const validateUserOtp = await userservice.validateUserOtp(req.body)
-    console.log('validateUserOtp', validateUserOtp)
-
       if (validateUserOtp) {
         const otpResponse = await userservice.validateOtp(req.body)
-        console.log("otpResponse", otpResponse)
         await Otps.findOneAndUpdate(
           { mobileNumber: req.body.mobileNumber },
-          // { type: req.body.type, FCMtoken: !_.isEmpty(req.body.FCMtoken) ? req.body.FCMtoken : '' }
           { type: req.body.type }
-
         )
         if (otpResponse) {
           this.authenticateUserSuccessAction(req, res, otpResponse)
