@@ -223,8 +223,10 @@ class Service {
       }
     } else {
       try {
-        const result = await BookTable.find();
-        return result;
+        // const result = await BookTable.find();
+        // return result;
+        const datas = await this.restore()
+          return datas
       } catch (error) {
         console.error("Error fetching data:", error);
         return []
