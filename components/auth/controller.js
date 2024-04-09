@@ -80,11 +80,11 @@ class Controller extends BaseController {
         if (otpResponse) {
           this.authenticateUserSuccessAction(req, res, otpResponse)
         } else {
-          this.sendResponse(req, res, ERROR.CLIENT_ERROR.BAD_REQUEST, { code: '1048' })
+          this.sendResponse(req, res, SUCCESS.CODE, { code: '1048' }, 'error')
         }
       } else {
         if (_.isEmpty(req.header('Type'))) {
-          this.sendResponse(req, res, ERROR.CLIENT_ERROR.BAD_REQUEST, { code: '1063' })
+          this.sendResponse(req, res, SUCCESS.CODE, { code: '1063' }, 'error')
         } else {
           this.sendResponse(req, res, SUCCESS.CODE, { code: '1063' }, 'error')
         }
