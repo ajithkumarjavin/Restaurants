@@ -19,7 +19,7 @@ router
 router
   .route('/')
   .get(
-    auth,
+    // auth,
     validator.validateRequest.bind(
       new Validator().init(requestValidator.list)
     ),
