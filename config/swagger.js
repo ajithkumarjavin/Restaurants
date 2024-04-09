@@ -9,8 +9,8 @@ module.exports = {
   },
   servers: [
     {
-      // url: `${process.env.SWAGGER_BASEPATH}`
-      url: `http://localhost:3000`
+      url: `${process.env.SWAGGER_BASEPATH}`
+      // url: `http://localhost:3000`
     }
   ],
   // tags: [
