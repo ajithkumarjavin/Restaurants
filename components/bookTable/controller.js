@@ -50,6 +50,7 @@ class Controller extends BaseController {
   async getBookTable(req, res, next) {
     try {
       const data = await service.getBookTable(req && req.query)
+      console.log("data", data)
       if (!_.isEmpty(data)) {
         this.sendResponse(req, res, SUCCESS.CODE, {
           code: '1027',

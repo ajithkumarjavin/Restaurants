@@ -202,7 +202,6 @@ class Service {
       if (reqQuery.date && !_.isEmpty(reqQuery.date)) {
         match.$and.push({ date: reqQuery.date });
       }
-
       if (reqQuery.status && !_.isEmpty(reqQuery.status)) {
         match.$and.push({ status: reqQuery.status });
       }
@@ -222,7 +221,10 @@ class Service {
           return finalData
         } else {
           const datas = await this.restore()
-          return datas
+          const data = {
+            bookedSlots : datas
+          }
+          return data
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -230,10 +232,11 @@ class Service {
       }
     } else {
       try {
-        // const result = await BookTable.find();
-        // return result;
         const datas = await this.restore()
-        return datas
+        const data = {
+          bookedSlots : datas
+        }
+        return data
       } catch (error) {
         console.error("Error fetching data:", error);
         return []
@@ -342,6 +345,7 @@ class Service {
     } else {
 
       const datas = searchResults && searchResults[0].bookedSlots;
+
       if (!datas || !Array.isArray(datas)) {
         console.error("Error: searchResults or searchResults.bookedSlots is null or not an array.");
         return []; // or throw an error, depending on your application logic
@@ -350,25 +354,34 @@ class Service {
       const currentTime = new Date();
       const currentHour = currentTime.getHours();
       const currentMinutes = currentTime.getMinutes();
-      for (const data of datas) {
-        const [slotHour, slotMinute, period] = data.time.match(/(\d+):(\d+)\s(AM|PM)/).slice(1);
-        let slotHour24 = parseInt(slotHour);
-        if (period === 'PM' && slotHour24 !== 12) {
-          slotHour24 += 12;
-        } else if (period === 'AM' && slotHour24 === 12) {
-          slotHour24 = 0;
-        }
-        if (slotHour === '12' && period === 'AM') {
-          data.booked = false;
-          continue;
-        }
+      const currentDates = new Date(); 
+      const futureDateStr = searchResults[0].date; 
+      const [day, month, year] = futureDateStr.split("-");
+      const futureDate = new Date(year, month - 1, day);
 
-        if (
-          (currentHour > slotHour24) ||
-          (currentHour === slotHour24 && currentMinutes >= parseInt(slotMinute))
-          || data.email
-        ) {
-          data.booked = true;
+      if (futureDate.toDateString() === currentDates.toDateString()) {
+        for (const data of datas) {
+          const [slotHour, slotMinute, period] = data.time.match(/(\d+):(\d+)\s(AM|PM)/).slice(1);
+          let slotHour24 = parseInt(slotHour);
+          if (period === 'PM' && slotHour24 !== 12) {
+            slotHour24 += 12;
+          } else if (period === 'AM' && slotHour24 === 12) {
+            slotHour24 = 0;
+          }
+          if (slotHour === '12' && period === 'AM') {
+            data.booked = false;
+            continue;
+          }
+          if (
+            (currentHour > slotHour24) ||
+            (currentHour === slotHour24 && currentMinutes >= parseInt(slotMinute)) || data.email
+          ) {
+            data.booked = true;
+          }
+        }
+      } else {
+        for (const data of datas) {
+          data.booked = data && data.email ? true : false;
         }
       }
 
