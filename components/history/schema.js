@@ -20,8 +20,7 @@ const schema = new Schema(
     },
     email: {
       type: String,
-      trim: true,
-      unique:true
+      trim: true
     },
     time: {
       type: String,
