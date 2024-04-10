@@ -17,8 +17,6 @@ const ADMIN_USER_EMAIL = process.env.ADMIN_USER_EMAIL
 class Service {
 
   async createBookTable(params) {
-
-
     const emailData = {
       type: params.type,
       date: params.date,
@@ -88,7 +86,11 @@ class Service {
         return updatedData;
       } else {
         const data = await BookTable.create(params);
-        await History.create(emailData)
+        const datas = {
+          ...emailData,
+          status: 'BOOKED'
+        }
+        await History.create(datas)
         this.transport(emailData)
         return data;
       }
