@@ -17,6 +17,8 @@ const ADMIN_USER_EMAIL = process.env.ADMIN_USER_EMAIL
 class Service {
 
   async createBookTable(params) {
+
+
     const emailData = {
       type: params.type,
       date: params.date,
@@ -68,7 +70,6 @@ class Service {
     } else {
       const existingDate = await BookTable.findOne({ date: extractedData.date });
       if (!_.isEmpty(existingDate)) {
-        // const updatedData = await BookTable.findOneAndUpdate({ date: extractedData.date }, existingDate, { new: true });
         const updateOperations = {
           $set: { bookedSlots: extractedData.bookedSlots }
         };
@@ -195,24 +196,30 @@ class Service {
 
   async getBookTable(query) {
     const reqQuery = query;
-
-    console.log("reqQuery", reqQuery)
-
     if (!_.isEmpty(reqQuery.date)) {
       const match = { $and: [] };
+
       if (reqQuery.date && !_.isEmpty(reqQuery.date)) {
         match.$and.push({ date: reqQuery.date });
       }
+
       if (reqQuery.status && !_.isEmpty(reqQuery.status)) {
         match.$and.push({ status: reqQuery.status });
       }
-      match.$and.push({ status: 'ACTIVE' });
-      const pipeline = [{ $match: match }];
       try {
+        const pipeline = [
+          {
+            $match: match
+          },
+        ];
         const result = await BookTable.aggregate(pipeline);
         if (!_.isEmpty(result)) {
-          const [firstElement] = result;
-          return { ...firstElement }
+          const datas = await this.restore(result);
+          const updateOperations = {
+            $set: { bookedSlots: datas }
+          };
+          const finalData = await BookTable.findOneAndUpdate({ date: result[0].date }, updateOperations, { new: true });
+          return finalData
         } else {
           const datas = await this.restore()
           return datas
@@ -226,7 +233,7 @@ class Service {
         // const result = await BookTable.find();
         // return result;
         const datas = await this.restore()
-          return datas
+        return datas
       } catch (error) {
         console.error("Error fetching data:", error);
         return []
@@ -250,63 +257,124 @@ class Service {
     })
   }
 
-  async restore() {
-    const datas =
-      [
-        { "booked": false, time: '12:00 PM' },
-        { "booked": false, time: '12:15 PM' },
-        { "booked": false, time: '12:30 PM' },
-        { "booked": false, time: '12:45 PM' },
-        { "booked": false, time: '01:00 PM' },
-        { "booked": false, time: '01:15 PM' },
-        { "booked": false, time: '01:30 PM' },
-        { "booked": false, time: '01:45 PM' },
-        { "booked": false, time: '02:00 PM' },
-        { "booked": false, time: '02:15 PM' },
-        { "booked": false, time: '02:30 PM' },
-        { "booked": false, time: '02:45 PM' },
-        { "booked": false, time: '03:00 PM' },
-        { "booked": false, time: '03:15 PM' },
-        { "booked": false, time: '03:30 PM' },
-        { "booked": false, time: '03:45 PM' },
-        { "booked": false, time: '04:00 PM' },
-        { "booked": false, time: '04:15 PM' },
-        { "booked": false, time: '04:30 PM' },
-        { "booked": false, time: '04:45 PM' },
-        { "booked": false, time: '05:00 PM' },
-        { "booked": false, time: '05:15 PM' },
-        { "booked": false, time: '05:30 PM' },
-        { "booked": false, time: '05:45 PM' },
-        { "booked": false, time: '06:00 PM' },
-        { "booked": false, time: '06:15 PM' },
-        { "booked": false, time: '06:30 PM' },
-        { "booked": false, time: '06:45 PM' },
-        { "booked": false, time: '07:00 PM' },
-        { "booked": false, time: '07:15 PM' },
-        { "booked": false, time: '07:30 PM' },
-        { "booked": false, time: '07:45 PM' },
-        { "booked": false, time: '08:00 PM' },
-        { "booked": false, time: '08:15 PM' },
-        { "booked": false, time: '08:30 PM' },
-        { "booked": false, time: '08:45 PM' },
-        { "booked": false, time: '09:00 PM' },
-        { "booked": false, time: '09:15 PM' },
-        { "booked": false, time: '09:30 PM' },
-        { "booked": false, time: '09:45 PM' },
-        { "booked": false, time: '10:00 PM' },
-        { "booked": false, time: '10:15 PM' },
-        { "booked": false, time: '10:30 PM' },
-        { "booked": false, time: '10:45 PM' },
-        { "booked": false, time: '11:00 PM' },
-        { "booked": false, time: '11:15 PM' },
-        { "booked": false, time: '11:30 PM' },
-        { "booked": false, time: '11:45 PM' },
-        { "booked": false, time: '12:00 AM' },
-        { "booked": false, time: '12:15 AM' },
-        { "booked": false, time: '12:30 AM' },
-        { "booked": false, time: '12:45 AM' }
-      ]
-    return datas
+  async restore(searchResults) {
+    if (_.isEmpty(searchResults)) {
+      const datas =
+        [
+          { "booked": false, time: '12:00 PM' },
+          { "booked": false, time: '12:15 PM' },
+          { "booked": false, time: '12:30 PM' },
+          { "booked": false, time: '12:45 PM' },
+          { "booked": false, time: '01:00 PM' },
+          { "booked": false, time: '01:15 PM' },
+          { "booked": false, time: '01:30 PM' },
+          { "booked": false, time: '01:45 PM' },
+          { "booked": false, time: '02:00 PM' },
+          { "booked": false, time: '02:15 PM' },
+          { "booked": false, time: '02:30 PM' },
+          { "booked": false, time: '02:45 PM' },
+          { "booked": false, time: '03:00 PM' },
+          { "booked": false, time: '03:15 PM' },
+          { "booked": false, time: '03:30 PM' },
+          { "booked": false, time: '03:45 PM' },
+          { "booked": false, time: '04:00 PM' },
+          { "booked": false, time: '04:15 PM' },
+          { "booked": false, time: '04:30 PM' },
+          { "booked": false, time: '04:45 PM' },
+          { "booked": false, time: '05:00 PM' },
+          { "booked": false, time: '05:15 PM' },
+          { "booked": false, time: '05:30 PM' },
+          { "booked": false, time: '05:45 PM' },
+          { "booked": false, time: '06:00 PM' },
+          { "booked": false, time: '06:15 PM' },
+          { "booked": false, time: '06:30 PM' },
+          { "booked": false, time: '06:45 PM' },
+          { "booked": false, time: '07:00 PM' },
+          { "booked": false, time: '07:15 PM' },
+          { "booked": false, time: '07:30 PM' },
+          { "booked": false, time: '07:45 PM' },
+          { "booked": false, time: '08:00 PM' },
+          { "booked": false, time: '08:15 PM' },
+          { "booked": false, time: '08:30 PM' },
+          { "booked": false, time: '08:45 PM' },
+          { "booked": false, time: '09:00 PM' },
+          { "booked": false, time: '09:15 PM' },
+          { "booked": false, time: '09:30 PM' },
+          { "booked": false, time: '09:45 PM' },
+          { "booked": false, time: '10:00 PM' },
+          { "booked": false, time: '10:15 PM' },
+          { "booked": false, time: '10:30 PM' },
+          { "booked": false, time: '10:45 PM' },
+          { "booked": false, time: '11:00 PM' },
+          { "booked": false, time: '11:15 PM' },
+          { "booked": false, time: '11:30 PM' },
+          { "booked": false, time: '11:45 PM' },
+          { "booked": false, time: '12:00 AM' },
+          { "booked": false, time: '12:15 AM' },
+          { "booked": false, time: '12:30 AM' },
+          { "booked": false, time: '12:45 AM' }
+        ]
+      const currentTime = new Date();
+      const currentHour = currentTime.getHours();
+      const currentMinutes = currentTime.getMinutes();
+      const currentPeriod = currentHour < 12 ? 'AM' : 'PM';
+      for (const data of datas) {
+        const [slotHour, slotMinute, period] = data.time.match(/(\d+):(\d+)\s(AM|PM)/).slice(1);
+        let slotHour24 = parseInt(slotHour);
+        if (period === 'PM' && slotHour24 !== 12) {
+          slotHour24 += 12;
+        } else if (period === 'AM' && slotHour24 === 12) {
+          slotHour24 = 0;
+        }
+        if (slotHour === '12' && period === 'AM') {
+          data.booked = false;
+          continue;
+        }
+
+        if (
+          (currentHour > slotHour24) ||
+          (currentHour === slotHour24 && currentMinutes >= parseInt(slotMinute))
+        ) {
+          data.booked = true;
+        }
+      }
+      return datas;
+    } else {
+
+      const datas = searchResults && searchResults[0].bookedSlots;
+      if (!datas || !Array.isArray(datas)) {
+        console.error("Error: searchResults or searchResults.bookedSlots is null or not an array.");
+        return []; // or throw an error, depending on your application logic
+      }
+
+      const currentTime = new Date();
+      const currentHour = currentTime.getHours();
+      const currentMinutes = currentTime.getMinutes();
+      for (const data of datas) {
+        const [slotHour, slotMinute, period] = data.time.match(/(\d+):(\d+)\s(AM|PM)/).slice(1);
+        let slotHour24 = parseInt(slotHour);
+        if (period === 'PM' && slotHour24 !== 12) {
+          slotHour24 += 12;
+        } else if (period === 'AM' && slotHour24 === 12) {
+          slotHour24 = 0;
+        }
+        if (slotHour === '12' && period === 'AM') {
+          data.booked = false;
+          continue;
+        }
+
+        if (
+          (currentHour > slotHour24) ||
+          (currentHour === slotHour24 && currentMinutes >= parseInt(slotMinute))
+          || data.email
+        ) {
+          data.booked = true;
+        }
+      }
+
+      return datas;
+
+    }
   }
 
   async deleteBookTable(BookTableIds) {

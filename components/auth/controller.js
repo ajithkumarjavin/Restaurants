@@ -12,7 +12,6 @@ class Controller extends BaseController {
       if (_.isEmpty(checkEmail)) {
         const generatedOtp = Math.floor(1000 + Math.random() * 9000)
         const userSignUpDetail = await userservice.userSignUp(req.body, generatedOtp)
-        console.log("userSignUpDetail", userSignUpDetail)
         if (userSignUpDetail) {
           const data = Controller.getPayload(userSignUpDetail)
           this.sendResponse(req, res, SUCCESS.CODE, {
@@ -22,7 +21,7 @@ class Controller extends BaseController {
         }
       } else {
         if (_.isEmpty(req.header('Type'))) {
-          this.sendResponse(req, res, ERROR.CLIENT_ERROR.BAD_REQUEST, { code: '1051' })
+          this.sendResponse(req, res, SUCCESS.CODE, { code: '1051' }, 'error')
         } else {
           this.sendResponse(req, res, SUCCESS.CODE, { code: '1051' }, 'error')
         }
