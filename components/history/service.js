@@ -48,11 +48,11 @@ class Service {
     const page = Number(reqQuery.page) || 1;
     const pageNo = limit * (page - 1);
     const sortField = reqQuery.sort || 'createdAt';
-    const order = reqQuery.order === 'desc' ? -1 : 1;
+    const order = 'desc'
     const match = {};
 
     const currentTime = moment();
-    const currentDate = moment().startOf('day');
+    const currentDate = moment().startOf('day').utcOffset('+02:00');
     const currentTimes = new Date();
     const currentHour = currentTimes.getHours();
     const currentMinutes = currentTimes.getMinutes();
@@ -85,7 +85,7 @@ class Service {
     const result = await History.find(match)
 
     for (const data of result) {
-      const dataDate = moment(data.date, 'DD-MM-YYYY')
+      const dataDate = moment(data.date, 'DD-MM-YYYY').utcOffset('+02:00')
       if (dataDate.isSame(currentDate, 'day')) {
         if (data.status === 'BOOKED') {
           const [slotHour, slotMinute, period] = data.time.match(/(\d+):(\d+)\s(AM|PM)/).slice(1);
@@ -128,9 +128,12 @@ class Service {
       }
     }
     const results = await History.find(match)
-      .sort({ [sortField]: order, updatedAt: -1 }) 
+      .sort({ [sortField]: order, updatedAt: 1 }) 
       .skip(pageNo)
       .limit(limit);
+
+      console.log("results", results)
+
     const count = await History.countDocuments(match);
     const lastUpdatedData = results.length > 0 ? results[0].updatedAt : null;
     return { results, count, lastUpdatedData };

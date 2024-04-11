@@ -1,13 +1,14 @@
 const BookTable = require('./schema')
 const Otps = require('../otps/schema')
 const History = require('../history/schema')
-
+const moment = require('moment');
 const { errLogger } = require('../../config/logger')
 const { USER } = require('../../libs/constants')
 const mongoose = require('mongoose')
 const _ = require('lodash')
 const nodemailer = require('nodemailer')
 const { type } = require('@hapi/joi/lib/types/object')
+const momentTime = require('moment-timezone');
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL
 const ADMIN_PASS = process.env.ADMIN_PASS
@@ -29,7 +30,6 @@ class Service {
     };
     const extractedData = _.omit(params, ['time', 'firstName', 'lastName', 'email', 'mobileNumber', 'numberOfGuests', "type"]);
     if (params.type === "CANCELLED") {
-      console.log("test")
       const existingDate = await BookTable.findOne({ date: extractedData.date });
       if (existingDate) {
         const updatedBookedSlots = existingDate.bookedSlots.map(slot => {
@@ -50,18 +50,20 @@ class Service {
             { $set: { 'bookedSlots.$': updatedBookedSlots.find(slot => slot.time === emailData.time) } },
             { new: true }
           )
+          console.log("data", data)
           await History.findOneAndUpdate(
-            { email: emailData.email },
-            { $set: { time: emailData.time, status: "CANCELLED" } },
+            { email: emailData.email, time: emailData.time },
+            { $set: { status: "CANCELLED" } },
             { new: true }
-        );
+          );
           this.transport(emailData)
-          return data;
+          // return data;
+          const params = { data, type: "CANCELLED" }
+          return params
         } catch (error) {
           console.error("Error updating BookTable:", error);
         }
-        const params = { data, type: "CANCELLED" }
-        return params
+      
       } else {
         return false
       }
@@ -214,9 +216,6 @@ class Service {
           },
         ];
         const result = await BookTable.aggregate(pipeline);
-
-        console.log("result", result)
-
         if (!_.isEmpty(result)) {
           const datas = await this.restore(result);
           const updateOperations = {
@@ -227,7 +226,7 @@ class Service {
         } else {
           const datas = await this.restore()
           const data = {
-            bookedSlots : datas
+            bookedSlots: datas
           }
           return data
         }
@@ -239,7 +238,7 @@ class Service {
       try {
         const datas = await this.restore()
         const data = {
-          bookedSlots : datas
+          bookedSlots: datas
         }
         return data
       } catch (error) {
@@ -322,49 +321,80 @@ class Service {
           { "booked": false, time: '12:30 AM' },
           { "booked": false, time: '12:45 AM' }
         ]
-      const currentTime = new Date();
-      const currentHour = currentTime.getHours();
-      const currentMinutes = currentTime.getMinutes();
-      const currentPeriod = currentHour < 12 ? 'AM' : 'PM';
-      for (const data of datas) {
-        const [slotHour, slotMinute, period] = data.time.match(/(\d+):(\d+)\s(AM|PM)/).slice(1);
-        let slotHour24 = parseInt(slotHour);
-        if (period === 'PM' && slotHour24 !== 12) {
-          slotHour24 += 12;
-        } else if (period === 'AM' && slotHour24 === 12) {
-          slotHour24 = 0;
-        }
-        if (slotHour === '12' && period === 'AM') {
-          data.booked = false;
-          continue;
-        }
 
-        if (
-          (currentHour > slotHour24) ||
-          (currentHour === slotHour24 && currentMinutes >= parseInt(slotMinute))
-        ) {
-          data.booked = true;
-        }
-      }
+      //   const currentTime = new Date();
+      // const currentHour = currentTime.getHours();
+      // const currentMinutes = currentTime.getMinutes();
+      // const currentPeriod = currentHour < 12 ? 'AM' : 'PM';
+      // for (const data of datas) {
+      //   const [slotHour, slotMinute, period] = data.time.match(/(\d+):(\d+)\s(AM|PM)/).slice(1);
+      //   let slotHour24 = parseInt(slotHour);
+      //   if (period === 'PM' && slotHour24 !== 12) {
+      //     slotHour24 += 12;
+      //   } else if (period === 'AM' && slotHour24 === 12) {
+      //     slotHour24 = 0;
+      //   }
+      //   if (slotHour === '12' && period === 'AM') {
+      //     data.booked = false;
+      //     continue;
+      //   }
+
+      //   if (
+      //     (currentHour > slotHour24) ||
+      //     (currentHour === slotHour24 && currentMinutes >= parseInt(slotMinute))
+      //   ) {
+      //     data.booked = true;
+      //   }
+      // }
+
+
+      // const currentTimeUTC = moment.utc();
+      // const currentTimeUTCPlusOne = currentTimeUTC.clone().utcOffset('+02:00');
+      // const currentHour = currentTimeUTCPlusOne.hours();
+      // const currentMinutes = currentTimeUTCPlusOne.minutes();
+      // const currentPeriod = currentHour < 12 ? 'AM' : 'PM';
+
+      // console.log("currentTimeUTCPlusOne", currentTimeUTCPlusOne)
+
+      // for (const data of datas) {
+      //   const [slotHour, slotMinute, period] = data.time.match(/(\d+):(\d+)\s(AM|PM)/).slice(1);
+      //   let slotHour24 = parseInt(slotHour);
+
+      //   if (period === 'PM' && slotHour24 !== 12) {
+      //     slotHour24 += 12;
+      //   } else if (period === 'AM' && slotHour24 === 12) {
+      //     slotHour24 = 0;
+      //   }
+      //   if (slotHour === '12' && period === 'AM') {
+      //     data.booked = false;
+      //     continue;
+      //   }
+      //   const slotTime = currentTimeUTCPlusOne.clone().hours(slotHour24).minutes(parseInt(slotMinute));
+
+      //   if (currentTimeUTCPlusOne.isAfter(slotTime) || currentTimeUTCPlusOne.isSame(slotTime)) {
+      //     data.booked = true;
+      //   }
+      // }
+
+
+
+
       return datas;
     } else {
 
       const datas = searchResults && searchResults[0].bookedSlots;
-
-      if (!datas || !Array.isArray(datas)) {
-        console.error("Error: searchResults or searchResults.bookedSlots is null or not an array.");
-        return []; // or throw an error, depending on your application logic
-      }
-
-      const currentTime = new Date();
-      const currentHour = currentTime.getHours();
-      const currentMinutes = currentTime.getMinutes();
-      const currentDates = new Date(); 
-      const futureDateStr = searchResults[0].date; 
+      const currentTime = moment().utcOffset('+02:00');
+      const currentHour = currentTime.hours();
+      const currentMinutes = currentTime.minutes();
+      const currentDates = moment().utcOffset('+02:00');
+      const futureDateStr = currentDates.format('DD-MM-YYYY')
+      console.log("futureDateStr", futureDateStr)
       const [day, month, year] = futureDateStr.split("-");
-      const futureDate = new Date(year, month - 1, day);
-
-      if (futureDate.toDateString() === currentDates.toDateString()) {
+      const isoDateString = `${year}-${month}-${day}`;
+      const futureDate = moment(isoDateString);
+      // Compare the dates of futureDate and currentDates
+      if (futureDate.isSame(currentDates, 'day')) {
+        console.log('currentDates', currentDates)
         for (const data of datas) {
           const [slotHour, slotMinute, period] = data.time.match(/(\d+):(\d+)\s(AM|PM)/).slice(1);
           let slotHour24 = parseInt(slotHour);
@@ -389,7 +419,6 @@ class Service {
           data.booked = data && data.email ? true : false;
         }
       }
-
       return datas;
 
     }
