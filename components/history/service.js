@@ -128,11 +128,13 @@ class Service {
       }
     }
     const results = await History.find(match)
-      .sort({ [sortField]: order })
+      .sort({ [sortField]: order, updatedAt: -1 }) 
       .skip(pageNo)
       .limit(limit);
     const count = await History.countDocuments(match);
-    return { results, count };
+    const lastUpdatedData = results.length > 0 ? results[0].updatedAt : null;
+    return { results, count, lastUpdatedData };
+
   }
 
 
