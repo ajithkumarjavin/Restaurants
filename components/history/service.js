@@ -7,6 +7,7 @@ const _ = require('lodash')
 const nodemailer = require('nodemailer')
 const ADMIN_PASS = process.env.ADMIN_PASS
 const ADMIN_History_EMAIL = process.env.ADMIN_History_EMAIL
+const moment = require('moment');
 
 class Service {
 
@@ -40,14 +41,38 @@ class Service {
     }
   }
 
+
   async getHistorys(query) {
-    const reqQuery = query
+    const reqQuery = query;
     const limit = Number(reqQuery.limit) || Number(process.env.PAGE_LIMIT) || 20;
     const page = Number(reqQuery.page) || 1;
     const pageNo = limit * (page - 1);
     const sortField = reqQuery.sort || 'createdAt';
     const order = reqQuery.order === 'desc' ? -1 : 1;
     const match = {};
+
+    const currentTime = moment();
+    const currentDate = moment().startOf('day');
+    const currentTimes = new Date();
+    const currentHour = currentTimes.getHours();
+    const currentMinutes = currentTimes.getMinutes();
+    const currentPeriod = currentHour < 12 ? 'AM' : 'PM';
+    // const pipeline = [
+    //   {
+    //     $match: {
+    //       date: { $lt: currentDate.format('DD-MM-YYYY') }
+    //     }
+    //   }
+    // ];
+
+    // const pastRecords = await History.aggregate(pipeline);
+    // const updatePromises = pastRecords.map(record => {
+    //   return History.updateOne(
+    //     { _id: record._id },
+    //     { $set: { status: 'COMPLETED' } }
+    //   );
+    // });
+    // console.log("pastRecords", pastRecords);
     if (reqQuery.mobileNumber) {
       match.mobileNumber = { $regex: new RegExp(reqQuery.mobileNumber) };
     }
@@ -57,13 +82,57 @@ class Service {
     if (reqQuery.status) {
       match.status = reqQuery.status;
     }
+    const result = await History.find(match)
+    console.log("results", result)
+    for (const data of result) {
+      const dataDate = moment(data.date, 'DD-MM-YYYY')
+      if (dataDate.isSame(currentDate, 'day')) {
+        const [slotHour, slotMinute, period] = data.time.match(/(\d+):(\d+)\s(AM|PM)/).slice(1);
+        let slotHour24 = parseInt(slotHour);
+        if (period === 'PM' && slotHour24 !== 12) {
+          slotHour24 += 12;
+        } else if (period === 'AM' && slotHour24 === 12) {
+          slotHour24 = 0;
+        }
+        if (slotHour === '12' && period === 'AM') {
+          data.booked = false;
+          continue;
+        }
+        console.log("Slot time:", slotHour24, slotMinute);
+        console.log("Current time:", currentHour, currentMinutes);
+
+        if (
+          (currentHour > slotHour24) ||
+          (currentHour === slotHour24 && currentMinutes >= parseInt(slotMinute))
+        ) {
+          console.log("Updating status to COMPLETED for document with _id:", data._id);
+          await History.findByIdAndUpdate(data._id, { status: 'COMPLETED' });
+        }
+      } else {
+        const pipeline = [
+          {
+            $match: {
+              date: { $lt: currentDate.format('DD-MM-YYYY') }
+            }
+          }
+        ];
+        const pastRecords = await History.aggregate(pipeline);
+        const updatePromises = pastRecords.map(record => {
+          return History.updateOne(
+            { _id: record._id },
+            { $set: { status: 'COMPLETED' } }
+          );
+        });
+      }
+    }
     const results = await History.find(match)
       .sort({ [sortField]: order })
       .skip(pageNo)
       .limit(limit);
     const count = await History.countDocuments(match);
-    return { results, count }
+    return { results, count };
   }
+
 
   async HistoryLogin(req, code) {
     let data

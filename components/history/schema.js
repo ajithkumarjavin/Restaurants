@@ -39,7 +39,7 @@ const schema = new Schema(
     },
     status: {
       type: String,
-      enum: ['BOOKED', 'CANCELLED', 'DELETED'],
+      enum: ['BOOKED', 'CANCELLED', 'DELETED', 'COMPLETED'],
       required: false
     }
   },

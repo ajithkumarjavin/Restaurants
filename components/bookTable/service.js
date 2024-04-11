@@ -29,6 +29,7 @@ class Service {
     };
     const extractedData = _.omit(params, ['time', 'firstName', 'lastName', 'email', 'mobileNumber', 'numberOfGuests', "type"]);
     if (params.type === "CANCELLED") {
+      console.log("test")
       const existingDate = await BookTable.findOne({ date: extractedData.date });
       if (existingDate) {
         const updatedBookedSlots = existingDate.bookedSlots.map(slot => {
@@ -51,10 +52,9 @@ class Service {
           )
           await History.findOneAndUpdate(
             { email: emailData.email },
-            { time: emailData.time },
-            { status: "CANCELLED" },
+            { $set: { time: emailData.time, status: "CANCELLED" } },
             { new: true }
-          )
+        );
           this.transport(emailData)
           return data;
         } catch (error) {

@@ -7,6 +7,7 @@ class Controller extends BaseController {
   async createBookTable(req, res, next) {
     try {
       const data = await service.createBookTable(req.body)
+      console.log("data", data)
       if (!_.isEmpty(data)) {
         if(data.type === "CANCELLED"){
           this.sendResponse(req, res, SUCCESS.CODE, {
