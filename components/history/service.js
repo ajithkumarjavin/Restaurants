@@ -83,30 +83,31 @@ class Service {
       match.status = reqQuery.status;
     }
     const result = await History.find(match)
-    console.log("results", result)
+
     for (const data of result) {
       const dataDate = moment(data.date, 'DD-MM-YYYY')
       if (dataDate.isSame(currentDate, 'day')) {
-        const [slotHour, slotMinute, period] = data.time.match(/(\d+):(\d+)\s(AM|PM)/).slice(1);
-        let slotHour24 = parseInt(slotHour);
-        if (period === 'PM' && slotHour24 !== 12) {
-          slotHour24 += 12;
-        } else if (period === 'AM' && slotHour24 === 12) {
-          slotHour24 = 0;
-        }
-        if (slotHour === '12' && period === 'AM') {
-          data.booked = false;
-          continue;
-        }
-        console.log("Slot time:", slotHour24, slotMinute);
-        console.log("Current time:", currentHour, currentMinutes);
-
-        if (
-          (currentHour > slotHour24) ||
-          (currentHour === slotHour24 && currentMinutes >= parseInt(slotMinute))
-        ) {
-          console.log("Updating status to COMPLETED for document with _id:", data._id);
-          await History.findByIdAndUpdate(data._id, { status: 'COMPLETED' });
+        if (data.status === 'BOOKED') {
+          const [slotHour, slotMinute, period] = data.time.match(/(\d+):(\d+)\s(AM|PM)/).slice(1);
+          let slotHour24 = parseInt(slotHour);
+          if (period === 'PM' && slotHour24 !== 12) {
+            slotHour24 += 12;
+          } else if (period === 'AM' && slotHour24 === 12) {
+            slotHour24 = 0;
+          }
+          if (slotHour === '12' && period === 'AM') {
+            data.booked = false;
+            continue;
+          }
+          console.log("Slot time:", slotHour24, slotMinute);
+          console.log("Current time:", currentHour, currentMinutes);
+          if (
+            (currentHour > slotHour24) ||
+            (currentHour === slotHour24 && currentMinutes >= parseInt(slotMinute))
+          ) {
+            console.log("Updating status to COMPLETED for document with _id:", data._id);
+            await History.findByIdAndUpdate(data._id, { status: 'COMPLETED' });
+          }
         }
       } else {
         const pipeline = [
@@ -119,10 +120,11 @@ class Service {
         const pastRecords = await History.aggregate(pipeline);
         const updatePromises = pastRecords.map(record => {
           return History.updateOne(
-            { _id: record._id },
+            { _id: record._id, status: 'BOOKED' },
             { $set: { status: 'COMPLETED' } }
           );
         });
+        await Promise.all(updatePromises);
       }
     }
     const results = await History.find(match)

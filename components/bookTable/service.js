@@ -214,6 +214,9 @@ class Service {
           },
         ];
         const result = await BookTable.aggregate(pipeline);
+
+        console.log("result", result)
+
         if (!_.isEmpty(result)) {
           const datas = await this.restore(result);
           const updateOperations = {
