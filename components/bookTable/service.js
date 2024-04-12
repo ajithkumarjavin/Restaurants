@@ -329,7 +329,7 @@ class Service {
             // For weekdays
             const filteredWeekday = weekdays.map(slot => ({
               ...slot,
-              booked: slot.booked || currentDateTimeParis.isAfter(moment(slot.time, 'hh:mm A'))
+              booked: slot.booked || currentDateTimeParis.isAfter(moment(slot.time, 'hh:mm A').utcOffset('+02:00'))
           }));
           
           slots.push(...filteredWeekday);
@@ -338,7 +338,7 @@ class Service {
             // For weekends
             const filteredWeekday = weekend.map(slot => ({
               ...slot,
-              booked: slot.booked || currentDateTimeParis.isAfter(moment(slot.time, 'hh:mm A'))
+              booked: slot.booked || currentDateTimeParis.isAfter(moment(slot.time, 'hh:mm A').utcOffset('+02:00'))
           }));
           
           slots.push(...filteredWeekday);
