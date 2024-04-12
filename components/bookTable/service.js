@@ -9,6 +9,7 @@ const _ = require('lodash')
 const nodemailer = require('nodemailer')
 const { type } = require('@hapi/joi/lib/types/object')
 const momentTime = require('moment-timezone');
+const { push } = require('@hapi/joi/lib/ref');
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL
 const ADMIN_PASS = process.env.ADMIN_PASS
@@ -317,7 +318,7 @@ class Service {
         let currentTime = moment(startTime).utcOffset('+02:00')
         const endTimeMoment = moment(endTime).utcOffset('+02:00')
         const queryDate = moment(reqQuery.date, 'DD-MM-YYYY')
-        const currentDate = moment().utcOffset('+02:00')        
+        const currentDate = moment().utcOffset('+02:00')
         const currentDateAdjusted = currentDate.clone().utcOffset(queryDate.utcOffset());
         const isSameDay = queryDate.isSame(currentDateAdjusted, 'day');
         console.log("isSameDay", isSameDay)
@@ -326,22 +327,77 @@ class Service {
           console.log("currentday")
           if (!isWeekend(currentTime)) {
             // For weekdays
-            const filteredWeekday = weekdays.map(slot => ({
-              ...slot,
-              booked: slot.booked || moment().utcOffset('+0200').isAfter(moment(slot.time, 'hh:mm A').utcOffset('+0200'))
-          }))
-            
-            slots.push(...filteredWeekday);
-            currentTime.add(intervalWeekday, 'minutes');
-        } else {
+            //   const filteredWeekday = weekdays.map(slot => ({
+            //     ...slot,
+            //     booked: slot.booked || moment().utcOffset('+0200').isAfter(moment(slot.time, 'hh:mm A').utcOffset('+0200'))
+            // }))
+
+            //   slots.push(...filteredWeekday);
+            //   currentTime.add(intervalWeekday, 'minutes');
+
+            const currentDateTimeParis = moment().utcOffset('+0200');
+            const currentHour = currentDateTimeParis.hour();
+            const currentMinutes = currentDateTimeParis.minutes();
+            const updatedWeekdays = weekdays.map(slot => {
+              const [slotHour, slotMinute, period] = slot.time.match(/(\d+):(\d+)\s(AM|PM)/).slice(1);
+              let slotHour24 = parseInt(slotHour);
+              if (period === 'PM' && slotHour24 !== 12) {
+                slotHour24 += 12;
+              } else if (period === 'AM' && slotHour24 === 12) {
+                slotHour24 = 0;
+              }
+              if (slotHour === '12' && period === 'AM') {
+                slot.booked = false;
+                return slot;
+              }
+              if (
+                (currentHour > slotHour24) ||
+                (currentHour === slotHour24 && currentMinutes >= parseInt(slotMinute))
+              ) {
+                slot.booked = true;
+              } else {
+                slot.booked = false;
+              }
+              return slot;
+            });
+            slots.push(updatedWeekdays)
+          } else {
             // For weekends
-            const filteredWeekend = weekend.map(slot => ({
-              ...slot,
-              booked: slot.booked || moment().utcOffset('+0200').isAfter(moment(slot.time, 'hh:mm A').utcOffset('+0200'))
-          }));
-            slots.push(...filteredWeekend);
-            currentTime.add(intervalWeekend, 'minutes');
-        }
+            //   const filteredWeekend = weekend.map(slot => ({
+            //     ...slot,
+            //     booked: slot.booked || moment().utcOffset('+0200').isAfter(moment(slot.time, 'hh:mm A').utcOffset('+0200'))
+            // }));
+            //   slots.push(...filteredWeekend);
+            //   currentTime.add(intervalWeekend, 'minutes');
+
+            const currentDateTimeParis = moment().utcOffset('+0200');
+            const currentHour = currentDateTimeParis.hour();
+            const currentMinutes = currentDateTimeParis.minutes();
+            const updatedWeekdays = weekend.map(slot => {
+              const [slotHour, slotMinute, period] = slot.time.match(/(\d+):(\d+)\s(AM|PM)/).slice(1);
+              let slotHour24 = parseInt(slotHour);
+              if (period === 'PM' && slotHour24 !== 12) {
+                slotHour24 += 12;
+              } else if (period === 'AM' && slotHour24 === 12) {
+                slotHour24 = 0;
+              }
+              if (slotHour === '12' && period === 'AM') {
+                slot.booked = false;
+                return slot;
+              }
+              if (
+                (currentHour > slotHour24) ||
+                (currentHour === slotHour24 && currentMinutes >= parseInt(slotMinute))
+              ) {
+                slot.booked = true;
+              } else {
+                slot.booked = false;
+              }
+
+              return slot;
+            });
+            slots.push(updatedWeekdays)
+          }
         } else {
           console.log("future")
           if (!isWeekend(currentTime)) {
@@ -351,10 +407,6 @@ class Service {
             slots.push(...weekend)
           }
         }
-
-
-
-
 
         return slots
       };
@@ -367,41 +419,43 @@ class Service {
     } else {
 
       const datas = searchResults && searchResults[0].bookedSlots;
-      const currentTime = moment().utcOffset('+02:00');
-      const currentHour = currentTime.hours();
-      const currentMinutes = currentTime.minutes();
       const currentDates = moment().utcOffset('+02:00');
       const queryDate = moment(reqQuery.date, 'DD-MM-YYYY');
       const futureDateStr = currentDates.format('DD-MM-YYYY')
       console.log("futureDateStr", futureDateStr)
-      const [day, month, year] = futureDateStr.split("-");
-      const isoDateString = `${year}-${month}-${day}`;
-      const futureDate = moment([year, month - 1, day]).utcOffset('+02:00');
-      const currentDate = moment().utcOffset('+02:00');
-      // console.log("currentDates", currentDates)
-      // console.log("queryDate", queryDate)
-      // console.log("queryDate.isSame(currentDate)", queryDate.isSame(currentDate))
+      const currentDate = moment().utcOffset('+02:00')
       if (queryDate.isSame(currentDate, 'day')) {
         console.log('currentDates', currentDates)
-        for (const data of datas) {
-          const [slotHour, slotMinute, period] = data.time.match(/(\d+):(\d+)\s(AM|PM)/).slice(1);
+        const currentDateTimeParis = moment().utcOffset('+0200');
+        const currentHour = currentDateTimeParis.hour();
+        const currentMinutes = currentDateTimeParis.minutes();
+
+        const updatedSlots = datas.map(slot => {
+          const [slotHour, slotMinute, period] = slot.time.match(/(\d+):(\d+)\s(AM|PM)/).slice(1);
           let slotHour24 = parseInt(slotHour);
+
           if (period === 'PM' && slotHour24 !== 12) {
             slotHour24 += 12;
           } else if (period === 'AM' && slotHour24 === 12) {
             slotHour24 = 0;
           }
+
           if (slotHour === '12' && period === 'AM') {
-            data.booked = false;
-            continue;
+            slot.booked = false;
+            return slot;
           }
+
           if (
             (currentHour > slotHour24) ||
-            (currentHour === slotHour24 && currentMinutes >= parseInt(slotMinute)) || data.email
+            (currentHour === slotHour24 && currentMinutes >= parseInt(slotMinute)) ||
+            slot.email
           ) {
-            data.booked = true;
-          }
-        }
+            slot.booked = true;
+          } 
+
+          return slot;
+        });
+
       } else {
         for (const data of datas) {
           data.booked = data && data.email ? true : false;
