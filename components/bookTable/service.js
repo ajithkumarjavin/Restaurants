@@ -226,8 +226,8 @@ class Service {
           return finalData
         } else {
           console.log("result1")
-
-          const datas = await this.restore()
+          const emptyValue = ''
+          const datas = await this.restore(emptyValue, reqQuery)
 
 
           const data = {
@@ -271,36 +271,13 @@ class Service {
 
   async restore(searchResults, reqQuery) {
     if (_.isEmpty(searchResults)) {
-      const datas =
+      const weekdays =
         [
-          { "booked": false, time: '12:00 PM' },
-          { "booked": false, time: '12:15 PM' },
           { "booked": false, time: '12:30 PM' },
           { "booked": false, time: '12:45 PM' },
           { "booked": false, time: '01:00 PM' },
           { "booked": false, time: '01:15 PM' },
           { "booked": false, time: '01:30 PM' },
-          { "booked": false, time: '01:45 PM' },
-          { "booked": false, time: '02:00 PM' },
-          { "booked": false, time: '02:15 PM' },
-          { "booked": false, time: '02:30 PM' },
-          { "booked": false, time: '02:45 PM' },
-          { "booked": false, time: '03:00 PM' },
-          { "booked": false, time: '03:15 PM' },
-          { "booked": false, time: '03:30 PM' },
-          { "booked": false, time: '03:45 PM' },
-          { "booked": false, time: '04:00 PM' },
-          { "booked": false, time: '04:15 PM' },
-          { "booked": false, time: '04:30 PM' },
-          { "booked": false, time: '04:45 PM' },
-          { "booked": false, time: '05:00 PM' },
-          { "booked": false, time: '05:15 PM' },
-          { "booked": false, time: '05:30 PM' },
-          { "booked": false, time: '05:45 PM' },
-          { "booked": false, time: '06:00 PM' },
-          { "booked": false, time: '06:15 PM' },
-          { "booked": false, time: '06:30 PM' },
-          { "booked": false, time: '06:45 PM' },
           { "booked": false, time: '07:00 PM' },
           { "booked": false, time: '07:15 PM' },
           { "booked": false, time: '07:30 PM' },
@@ -316,75 +293,46 @@ class Service {
           { "booked": false, time: '10:00 PM' },
           { "booked": false, time: '10:15 PM' },
           { "booked": false, time: '10:30 PM' },
-          { "booked": false, time: '10:45 PM' },
-          { "booked": false, time: '11:00 PM' },
-          { "booked": false, time: '11:15 PM' },
-          { "booked": false, time: '11:30 PM' },
-          { "booked": false, time: '11:45 PM' },
-          { "booked": false, time: '12:00 AM' },
-          { "booked": false, time: '12:15 AM' },
-          { "booked": false, time: '12:30 AM' },
-          { "booked": false, time: '12:45 AM' }
         ]
-
-      //   const currentTime = new Date();
-      // const currentHour = currentTime.getHours();
-      // const currentMinutes = currentTime.getMinutes();
-      // const currentPeriod = currentHour < 12 ? 'AM' : 'PM';
-      // for (const data of datas) {
-      //   const [slotHour, slotMinute, period] = data.time.match(/(\d+):(\d+)\s(AM|PM)/).slice(1);
-      //   let slotHour24 = parseInt(slotHour);
-      //   if (period === 'PM' && slotHour24 !== 12) {
-      //     slotHour24 += 12;
-      //   } else if (period === 'AM' && slotHour24 === 12) {
-      //     slotHour24 = 0;
-      //   }
-      //   if (slotHour === '12' && period === 'AM') {
-      //     data.booked = false;
-      //     continue;
-      //   }
-
-      //   if (
-      //     (currentHour > slotHour24) ||
-      //     (currentHour === slotHour24 && currentMinutes >= parseInt(slotMinute))
-      //   ) {
-      //     data.booked = true;
-      //   }
-      // }
-
-
-      // const currentTimeUTC = moment.utc();
-      // const currentTimeUTCPlusOne = currentTimeUTC.clone().utcOffset('+02:00');
-      // const currentHour = currentTimeUTCPlusOne.hours();
-      // const currentMinutes = currentTimeUTCPlusOne.minutes();
-      // const currentPeriod = currentHour < 12 ? 'AM' : 'PM';
-
-      // console.log("currentTimeUTCPlusOne", currentTimeUTCPlusOne)
-
-      // for (const data of datas) {
-      //   const [slotHour, slotMinute, period] = data.time.match(/(\d+):(\d+)\s(AM|PM)/).slice(1);
-      //   let slotHour24 = parseInt(slotHour);
-
-      //   if (period === 'PM' && slotHour24 !== 12) {
-      //     slotHour24 += 12;
-      //   } else if (period === 'AM' && slotHour24 === 12) {
-      //     slotHour24 = 0;
-      //   }
-      //   if (slotHour === '12' && period === 'AM') {
-      //     data.booked = false;
-      //     continue;
-      //   }
-      //   const slotTime = currentTimeUTCPlusOne.clone().hours(slotHour24).minutes(parseInt(slotMinute));
-
-      //   if (currentTimeUTCPlusOne.isAfter(slotTime) || currentTimeUTCPlusOne.isSame(slotTime)) {
-      //     data.booked = true;
-      //   }
-      // }
-
-
-
-
-      return datas;
+      const weekend = [
+        { "booked": false, time: '12:30 PM' },
+        { "booked": false, time: '01:00 PM' },
+        { "booked": false, time: '01:30 PM' },
+        { "booked": false, time: '07:00 PM' },
+        { "booked": false, time: '07:30 PM' },
+        { "booked": false, time: '08:00 PM' },
+        { "booked": false, time: '08:30 PM' },
+        { "booked": false, time: '09:00 PM' },
+        { "booked": false, time: '09:30 PM' },
+        { "booked": false, time: '10:00 PM' },
+        { "booked": false, time: '10:30 PM' }
+      ];
+      const isWeekend = (date) => {
+        const dayOfWeek = date.day()
+        console.log("dayOfWeek", dayOfWeek)
+        return dayOfWeek === 5 || dayOfWeek === 6
+      };
+      const generateTimeSlots = (startTime, endTime, intervalWeekday, intervalWeekend) => {
+        const slots = [];
+        let currentTime = moment(startTime).utcOffset('+02:00')
+        const endTimeMoment = moment(endTime).utcOffset('+02:00')
+        if (!isWeekend(currentTime)) {
+          console.log("1")
+          // Weekday interval
+          slots.push(...weekdays)
+        } else {
+          console.log("2")
+          // Weekend interval
+          slots.push(...weekend)
+        }
+        return slots
+      };
+      const startTime = moment(reqQuery.date, 'DD-MM-YYYY')
+      const endTime = moment(reqQuery.date, 'DD-MM-YYYY')
+      const intervalWeekday = 15;
+      const intervalWeekend = 30;
+      const timeSlots = generateTimeSlots(startTime, endTime, intervalWeekday, intervalWeekend);
+      return timeSlots;
     } else {
 
       const datas = searchResults && searchResults[0].bookedSlots;
@@ -399,14 +347,9 @@ class Service {
       const isoDateString = `${year}-${month}-${day}`;
       const futureDate = moment([year, month - 1, day]).utcOffset('+02:00');
       const currentDate = moment().utcOffset('+02:00');
-
-      console.log("currentDates", currentDates)
-      console.log("queryDate", queryDate)
-
-
-      console.log("queryDate.isSame(currentDate)", queryDate.isSame(currentDate))
-
-
+      // console.log("currentDates", currentDates)
+      // console.log("queryDate", queryDate)
+      // console.log("queryDate.isSame(currentDate)", queryDate.isSame(currentDate))
       if (queryDate.isSame(currentDate, 'day')) {
         console.log('currentDates', currentDates)
         for (const data of datas) {
