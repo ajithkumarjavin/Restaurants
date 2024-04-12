@@ -315,43 +315,44 @@ class Service {
       const generateTimeSlots = (startTime, endTime, intervalWeekday, intervalWeekend) => {
         const slots = [];
         let currentTime = moment(startTime).utcOffset('+02:00')
-        console.log("currentTime", currentTime)
-        console.log("!isWeekend(currentTime)", !isWeekend(currentTime))
         const endTimeMoment = moment(endTime).utcOffset('+02:00')
-        const queryDate = moment(reqQuery.date, 'DD-MM-YYYY');
-        const currentDate = moment().utcOffset('+02:00');
-        if (queryDate.isSame(currentDate, 'day')) {
-          console.log("currentday")
-        if (!isWeekend(currentTime)) {
-          // For weekdays
-          const filteredWeekday = weekdays.map(slot => ({
-            ...slot,
-            booked: slot.booked || moment().isAfter(moment(slot.time, 'hh:mm A'))
-          }));
-          slots.push(...filteredWeekday);
-          currentTime.add(intervalWeekday, 'minutes');
-        } else {
-          // For weekends
-          const filteredWeekend = weekend.map(slot => ({
-            ...slot,
-            booked: slot.booked || moment().isAfter(moment(slot.time, 'hh:mm A'))
-          }));
-          slots.push(...filteredWeekend);
-          currentTime.add(intervalWeekend, 'minutes');
-        }
-      }else{
-        console.log("future")
+        const queryDate = moment(reqQuery.date, 'DD-MM-YYYY')
+        const currentDate = moment().utcOffset('+02:00')        
+        const currentDateAdjusted = currentDate.clone().utcOffset(queryDate.utcOffset());
+        const isSameDay = queryDate.isSame(currentDateAdjusted, 'day');
+        console.log("isSameDay", isSameDay)
 
-        if (!isWeekend(currentTime)) {
-          slots.push(...weekdays)
+        if (isSameDay) {
+          console.log("currentday")
+          if (!isWeekend(currentTime)) {
+            // For weekdays
+            const filteredWeekday = weekdays.map(slot => ({
+              ...slot,
+              booked: slot.booked || moment().isAfter(moment(slot.time, 'hh:mm A').utcOffset('+02:00'))
+            }));
+            slots.push(...filteredWeekday);
+            currentTime.add(intervalWeekday, 'minutes');
+          } else {
+            // For weekends
+            const filteredWeekend = weekend.map(slot => ({
+              ...slot,
+              booked: slot.booked || moment().isAfter(moment(slot.time, 'hh:mm A').utcOffset('+02:00'))
+            }));
+            slots.push(...filteredWeekend);
+            currentTime.add(intervalWeekend, 'minutes');
+          }
         } else {
-          console.log("2")
-          slots.push(...weekend)
+          console.log("future")
+          if (!isWeekend(currentTime)) {
+            slots.push(...weekdays)
+          } else {
+            console.log("2")
+            slots.push(...weekend)
+          }
         }
-      }
-        
-      
-    
+
+
+
 
 
         return slots
