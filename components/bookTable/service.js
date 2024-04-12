@@ -321,6 +321,7 @@ class Service {
         const currentDateAdjusted = currentDate.clone().utcOffset(queryDate.utcOffset());
         const isSameDay = queryDate.isSame(currentDateAdjusted, 'day');
         console.log("isSameDay", isSameDay)
+        const currentDateTimeParis = moment().utcOffset('+02:00'); // Get current date and time in UTC+02:00 (Paris time)
 
         if (isSameDay) {
           console.log("currentday")
@@ -328,18 +329,20 @@ class Service {
             // For weekdays
             const filteredWeekday = weekdays.map(slot => ({
               ...slot,
-              booked: slot.booked || moment().isAfter(moment(slot.time, 'hh:mm A').utcOffset('+02:00'))
-            }));
-            slots.push(...filteredWeekday);
-            currentTime.add(intervalWeekday, 'minutes');
+              booked: slot.booked || currentDateTimeParis.isAfter(moment(slot.time, 'hh:mm A'))
+          }));
+          
+          slots.push(...filteredWeekday);
+          currentTime.add(intervalWeekday, 'minutes');
           } else {
             // For weekends
-            const filteredWeekend = weekend.map(slot => ({
+            const filteredWeekday = weekend.map(slot => ({
               ...slot,
-              booked: slot.booked || moment().isAfter(moment(slot.time, 'hh:mm A').utcOffset('+02:00'))
-            }));
-            slots.push(...filteredWeekend);
-            currentTime.add(intervalWeekend, 'minutes');
+              booked: slot.booked || currentDateTimeParis.isAfter(moment(slot.time, 'hh:mm A'))
+          }));
+          
+          slots.push(...filteredWeekday);
+          currentTime.add(intervalWeekday, 'minutes');
           }
         } else {
           console.log("future")
