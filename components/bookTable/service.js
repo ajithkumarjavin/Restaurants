@@ -310,25 +310,54 @@ class Service {
       const isWeekend = (date) => {
         const dayOfWeek = date.day()
         console.log("dayOfWeek", dayOfWeek)
-        return dayOfWeek === 5 || dayOfWeek === 6
+        return dayOfWeek === 0 || dayOfWeek === 6
       };
       const generateTimeSlots = (startTime, endTime, intervalWeekday, intervalWeekend) => {
         const slots = [];
         let currentTime = moment(startTime).utcOffset('+02:00')
+        console.log("currentTime", currentTime)
+        console.log("!isWeekend(currentTime)", !isWeekend(currentTime))
         const endTimeMoment = moment(endTime).utcOffset('+02:00')
+        const queryDate = moment(reqQuery.date, 'DD-MM-YYYY');
+        const currentDate = moment().utcOffset('+02:00');
+        if (queryDate.isSame(currentDate, 'day')) {
+          console.log("currentday")
         if (!isWeekend(currentTime)) {
-          console.log("1")
-          // Weekday interval
+          // For weekdays
+          const filteredWeekday = weekdays.map(slot => ({
+            ...slot,
+            booked: slot.booked || moment().isAfter(moment(slot.time, 'hh:mm A'))
+          }));
+          slots.push(...filteredWeekday);
+          currentTime.add(intervalWeekday, 'minutes');
+        } else {
+          // For weekends
+          const filteredWeekend = weekend.map(slot => ({
+            ...slot,
+            booked: slot.booked || moment().isAfter(moment(slot.time, 'hh:mm A'))
+          }));
+          slots.push(...filteredWeekend);
+          currentTime.add(intervalWeekend, 'minutes');
+        }
+      }else{
+        console.log("future")
+
+        if (!isWeekend(currentTime)) {
           slots.push(...weekdays)
         } else {
           console.log("2")
-          // Weekend interval
           slots.push(...weekend)
         }
+      }
+        
+      
+    
+
+
         return slots
       };
-      const startTime = moment(reqQuery.date, 'DD-MM-YYYY')
-      const endTime = moment(reqQuery.date, 'DD-MM-YYYY')
+      const startTime = moment(reqQuery.date, 'DD-MM-YYYY').utcOffset('+02:00')
+      const endTime = moment(reqQuery.date, 'DD-MM-YYYY').utcOffset('+02:00')
       const intervalWeekday = 15;
       const intervalWeekend = 30;
       const timeSlots = generateTimeSlots(startTime, endTime, intervalWeekday, intervalWeekend);
