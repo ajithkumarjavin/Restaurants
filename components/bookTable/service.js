@@ -63,7 +63,7 @@ class Service {
         } catch (error) {
           console.error("Error updating BookTable:", error);
         }
-      
+
       } else {
         return false
       }
@@ -217,14 +217,19 @@ class Service {
         ];
         const result = await BookTable.aggregate(pipeline);
         if (!_.isEmpty(result)) {
-          const datas = await this.restore(result);
+          console.log("result", result)
+          const datas = await this.restore(result, reqQuery);
           const updateOperations = {
             $set: { bookedSlots: datas }
           };
           const finalData = await BookTable.findOneAndUpdate({ date: result[0].date }, updateOperations, { new: true });
           return finalData
         } else {
+          console.log("result1")
+
           const datas = await this.restore()
+
+
           const data = {
             bookedSlots: datas
           }
@@ -264,7 +269,7 @@ class Service {
     })
   }
 
-  async restore(searchResults) {
+  async restore(searchResults, reqQuery) {
     if (_.isEmpty(searchResults)) {
       const datas =
         [
@@ -387,13 +392,22 @@ class Service {
       const currentHour = currentTime.hours();
       const currentMinutes = currentTime.minutes();
       const currentDates = moment().utcOffset('+02:00');
+      const queryDate = moment(reqQuery.date, 'DD-MM-YYYY');
       const futureDateStr = currentDates.format('DD-MM-YYYY')
       console.log("futureDateStr", futureDateStr)
       const [day, month, year] = futureDateStr.split("-");
       const isoDateString = `${year}-${month}-${day}`;
-      const futureDate = moment(isoDateString);
-      // Compare the dates of futureDate and currentDates
-      if (futureDate.isSame(currentDates, 'day')) {
+      const futureDate = moment([year, month - 1, day]).utcOffset('+02:00');
+      const currentDate = moment().utcOffset('+02:00');
+
+      console.log("currentDates", currentDates)
+      console.log("queryDate", queryDate)
+
+
+      console.log("queryDate.isSame(currentDate)", queryDate.isSame(currentDate))
+
+
+      if (queryDate.isSame(currentDate, 'day')) {
         console.log('currentDates', currentDates)
         for (const data of datas) {
           const [slotHour, slotMinute, period] = data.time.match(/(\d+):(\d+)\s(AM|PM)/).slice(1);
