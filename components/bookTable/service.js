@@ -327,13 +327,6 @@ class Service {
           console.log("currentday")
           if (!isWeekend(currentTime)) {
             // For weekdays
-            //   const filteredWeekday = weekdays.map(slot => ({
-            //     ...slot,
-            //     booked: slot.booked || moment().utcOffset('+0200').isAfter(moment(slot.time, 'hh:mm A').utcOffset('+0200'))
-            // }))
-
-            //   slots.push(...filteredWeekday);
-            //   currentTime.add(intervalWeekday, 'minutes');
 
             const currentDateTimeParis = moment().utcOffset('+0200');
             const currentHour = currentDateTimeParis.hour();
@@ -358,17 +351,10 @@ class Service {
               } else {
                 slot.booked = false;
               }
-              return slot;
+              return slots.push(slot);
             });
-            slots.push(updatedWeekdays)
           } else {
             // For weekends
-            //   const filteredWeekend = weekend.map(slot => ({
-            //     ...slot,
-            //     booked: slot.booked || moment().utcOffset('+0200').isAfter(moment(slot.time, 'hh:mm A').utcOffset('+0200'))
-            // }));
-            //   slots.push(...filteredWeekend);
-            //   currentTime.add(intervalWeekend, 'minutes');
 
             const currentDateTimeParis = moment().utcOffset('+0200');
             const currentHour = currentDateTimeParis.hour();
@@ -394,9 +380,8 @@ class Service {
                 slot.booked = false;
               }
 
-              return slot;
+              return slots.push(slot);
             });
-            slots.push(updatedWeekdays)
           }
         } else {
           console.log("future")
