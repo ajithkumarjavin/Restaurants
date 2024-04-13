@@ -311,7 +311,7 @@ class Service {
       const isWeekend = (date) => {
         const dayOfWeek = date.day()
         console.log("dayOfWeek", dayOfWeek)
-        return dayOfWeek === 0 || dayOfWeek === 6
+        return dayOfWeek === 4 || dayOfWeek === 6
       };
       const generateTimeSlots = (startTime, endTime, intervalWeekday, intervalWeekend) => {
         const slots = [];
@@ -440,7 +440,6 @@ class Service {
 
           return slot;
         });
-
       } else {
         for (const data of datas) {
           data.booked = data && data.email ? true : false;
